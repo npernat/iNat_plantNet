@@ -42,7 +42,7 @@ isomex_first %>%
 
 # 2. Matching species, genera and family ####
 
-# including all candidates
+# 2.1 including all candidates
 # species 
 isomex_250_scores %>% 
   filter(species_exp!="noflower" 
@@ -76,8 +76,9 @@ isomex_250_scores%>%
   count(agree)%>% 
   mutate(perc=n/sum(n))  
 
-# Including only the first candidate (scores) of the App
-# Agreement with cutting scores - descending 
+# 2.2. Including only the first candidate (scores) of the App
+
+# Agreement with cutting scores - no threshold 
 
 # species 
 isomex_first %>% 
@@ -111,7 +112,8 @@ isomex_first%>%
     family_exp!=family~"no"))%>% 
   count(agree)%>% 
   mutate(perc=n/sum(n))  
-# Agreements with cutting scores > 80%
+
+# Agreements with cutting scores >0.8%
 # species 
 isomex_first %>% 
   filter(score>=0.80) %>%
@@ -149,7 +151,7 @@ isomex_first %>%
   mutate(perc=n/sum(n))  
 
 
-# Agreements with cutting scores > 50%
+# Agreements with cutting scores >0.5
 
 # species 
 isomex_first %>% 
@@ -187,7 +189,7 @@ isomex_first %>%
   count(agree)%>% 
   mutate(perc=n/sum(n)) 
 
-# Agreements with cutting scores > 30%
+# Agreements with cutting scores >0.3
 
 # species 
 isomex_first %>% 
@@ -225,7 +227,7 @@ isomex_first %>%
   count(agree)%>% 
   mutate(perc=n/sum(n)) 
 
-# # Agreements with cutting scores <30%
+# # Agreements with cutting scores <0.3
 
 # species 
 isomex_first %>% 

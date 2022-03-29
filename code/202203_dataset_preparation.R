@@ -8,7 +8,7 @@ install.packages("tidyverse")
 install.packages("cli")
 devtools::install_github(repo = 'BiologicalRecordsCentre/plantnet')
 install.packages("stringr")
-install.pakcages("taxize")
+install.packages("taxize")
 library(rinat)
 library(zoo)
 library(httr)
@@ -19,7 +19,9 @@ library(stringr)
 library(taxize)
 
 # 1. retrieving images from iNaturalist ####
+
 inat<-get_inat_obs(taxon_name="Isodontia mexicana", maxresults = 10000) 
+
 # get iNaturalist observation of I. mexicana, but it only works for one year at a time
 # adapt function to work for more than one year
 
@@ -27,9 +29,11 @@ years<-data.frame(year=c(2007:2021)) # define the years observations should be d
 inat_fun<-function(x){get_inat_obs_nostop(taxon_name = "Isodontia mexicana", meta=F,
                                           maxresults = 10000, year=x, quality="research")}
 # *I adapted the function so that it won't stop when a result is zero for a year
+
 Isodontia<-apply(years, 1, inat_fun) # loop over years
 names(Isodontia)<-as.character(c(2007:2021)) # list of observations, years are list elements
 Isodontia_df<-bind_rows(Isodontia) # create a dataframe
+
 # check dataframe
 dim(Isodontia_df)
 head(Isodontia_df$taxon_id)
@@ -38,6 +42,7 @@ iso_df<-Isodontia_df[,c(1,5,6,9,10,19,22,37)] # subset of interesting variables 
 iso_df$SampleID<-c(1:nrow(iso_df)) # create ID number for merging datasets later
 img_iso<-data.frame(imageURL=iso_df$image_url) # create a dataframe with all image URLs
 # iso_df was exported for the Expert identification
+
 
 # 2. Feed iNaturalist image URLs in PlantNet App and prepare dataset for merging with expert data ####
 
@@ -81,6 +86,7 @@ str(plantminer)
 isomex_250_test$family<-plantminer$family
 str(isomex_250_test)
 isomex_250_test$score<-as.numeric(isomex_250_test$score)
+
 
 # 3. Merge expert and plantNet dataset ####
 
