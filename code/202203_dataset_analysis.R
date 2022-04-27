@@ -304,7 +304,7 @@ lbls_50_spec = paste0(as.character(c(seq(3, 0, -1), seq(1, 3,1))))
 # figure
 library(ggplot2)
 library(viridis)
-tiff("./output/species_props_first_08.tiff", units="px",width = 3000,height = 2000,res = 360)
+plot_spec<-tiff("./output/species_props_first_08.tiff", units="px",width = 3000,height = 2000,res = 360)
 species_df_first_08 %>% 
   mutate(counts=ifelse(id_by=="Expert", n, -n)) %>%  
   ggplot(., aes(x=reorder(species, counts), y=counts, fill=id_by))+
@@ -323,7 +323,7 @@ species_df_first_08 %>%
         panel.grid.minor = element_blank()) +
   labs(y="Counts", fill="Identified by", 
        title="Plant species by method \n(scores>0.8, first score per URL)")+
-  scale_fill_viridis(discrete=T, begin=0.1, end=0.95, labels=c("App","Experts"))        
+  scale_fill_grey(start=0.1, end=0.75, labels=c("App","Experts"))        
 dev.off()
 
 
@@ -365,7 +365,7 @@ lbls_50_genus = paste0(as.character(c(seq(36, 0, -2), seq(2, 36,2))))
 
 # figure
 tiff("./output/genus_props_first.tiff", units="px",width = 3000,height = 2000,res = 360)
-genus_df_first %>% 
+plot_gen<-genus_df_first %>% 
   #filter(n>3) %>% 
   mutate(counts=ifelse(id_by=="Expert", n, -n)) %>%  
   ggplot(., aes(x=reorder(genus, counts), y=counts, fill=id_by))+
@@ -384,7 +384,7 @@ genus_df_first %>%
         panel.grid.minor = element_blank()) +
   labs(y="Counts", fill="Identified by", 
        title="Plant genus by method \n(scores>0.5, first score per URL)")+
-  scale_fill_viridis(discrete=T, begin=0.1, end=0.95, labels=c("App","Experts"))        
+  scale_fill_grey(start=0.1, end=0.75, labels=c("App","Experts"))        
 dev.off()
 
 # Figure matching families, threshold >0.5
@@ -421,7 +421,7 @@ lbls_50_family = paste0(as.character(c(seq(10, 0, -1), seq(1, 10,1))))
 
 # figure
 tiff("./output/family_props_first.tiff", units="px",width = 3000,height = 2000,res = 360)
-family_df_first %>% 
+plot_fam<-family_df_first %>% 
   mutate(counts=ifelse(id_by=="Expert", n, -n)) %>%  
   ggplot(., aes(x=reorder(family, counts), y=counts, fill=id_by))+
   geom_bar(stat="identity", width=0.5)+
@@ -439,9 +439,12 @@ family_df_first %>%
         panel.grid.minor = element_blank()) +
   labs(y="Counts", fill="Identified by", 
        title="Plant family by method \n(scores>0.5, first score per URL)")+
-  scale_fill_viridis(discrete=T, begin=0.1, end=0.95, labels=c("App","Experts"))        
+  scale_fill_grey(start=0.1, end=0.75, labels=c("App","Experts"))        
 dev.off()
 
+# figure as panel
+library(cowplot)
+plot_grid(plot_spec, plot_gen, plot_fam, nrow=3)
 
 # 4. Species list ####
 
@@ -473,3 +476,61 @@ unique(isomex_rom$species)
 
 # Romanian species and species identification by the App were added manually to the
 # expert species list
+
+# 5. Color and interaction figures ####
+isomex_first$colour_simp<-
+  case_when(isomex_first$colour=="green - white" ~ "white/green",
+            isomex_first$colour=="noflower"
+            |isomex_first$colour=="unidentifiable"
+            |isomex_first$colour=="need_id"~"NA",
+            TRUE~as.character(isomex_first$colour))
+
+tiff("./output/colour.tiff", units="px",width = 1000,height = 1500,res = 300)
+plot1<-isomex_first %>% distinct(image_url, .keep_all=TRUE) %>% 
+  select(colour_simp) %>% 
+  filter(!is.na(colour_simp)) %>%
+  filter(colour_simp!="NA") %>% 
+  group_by(colour_simp) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  ggplot(., aes(reorder(colour_simp, -n),n))+
+  geom_bar(stat="identity", width=0.5,fill=c("white","yellow","purple","blue","pink",
+                                             "light green", "light yellow", "orange", "dark green", 
+                                             "darkolivegreen1","lightpink","magenta"))+
+  labs(y="No. of identifications by experts")+
+  theme_gray() +
+  theme(axis.text.x = element_text(angle=45, hjust=1, size=10),
+        axis.title.x = element_blank(),
+        panel.grid = element_blank())
+dev.off()
+# interactions
+
+tiff("./output/interaction.tiff", units="px",width = 1000,height = 1500,res = 300)
+plot2<-isomex_first %>% distinct(image_url, .keep_all=TRUE) %>% 
+  select(interaction) %>% 
+  filter(!is.na(interaction)) %>%
+  filter(interaction!="NA") %>% 
+  mutate(interaction=case_when(
+    interaction=="nest_preparing"~"nesting",
+    TRUE~as.character(interaction)
+  )) %>% 
+  group_by(interaction) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  ggplot(., aes(reorder(interaction, -n),n))+
+  geom_bar(stat="identity", width=0.5, fill=gray.colors(7, start=0, end=0.6))+
+  labs(y="No. of identifications by experts")+
+  theme_gray() +
+  theme(axis.text.x = element_text(angle=45, hjust=1, size=10),
+        axis.title.x = element_blank(),
+        panel.grid = element_blank()) 
+dev.off()
+
+# figure as panel
+library(gridExtra)
+grid.arrange()
+
+library(cowplot)
+tiff("./output/interaction_color.tiff", units="px",width = 1800,height = 1200,res = 300)
+plot_grid(plot1, plot2)
+dev.off()
