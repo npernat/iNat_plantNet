@@ -125,6 +125,9 @@ isomex_first %>%
     latin_name!=species_exp~"no"))%>% 
   count(agree)%>% 
   mutate(perc=n/sum(n))  
+# this shows 4 + 1; however, the total number of observations of scores over 0.8 is n=6
+# as "Mentha spicata" was identified right by the experts and the App in two observations
+# therefore, the right result is 5 (83.3%).
 
 # genus
 isomex_first %>%  
@@ -269,10 +272,10 @@ isomex_first %>%
 library(ggplot2)
 library(viridis)
 
-# Figure matching species, threshold >0.8
+# Figure matching species, threshold >0.5
 # create subset of expert data
-species_exp_first_08<-isomex_first %>% 
-  filter(score>=0.8) %>% 
+species_exp_first_05<-isomex_first %>% 
+  filter(score>=0.5) %>% 
   select(species_exp) %>% 
   filter(species_exp!="noflower" 
          & species_exp!="need_id"
@@ -281,21 +284,21 @@ species_exp_first_08<-isomex_first %>%
   tally() %>% 
   arrange(desc(n)) %>% 
   mutate(id_by="Expert")
-colnames(species_exp_first_08)<-c("species", "n","id_by")
+colnames(species_exp_first_05)<-c("species", "n","id_by")
 
 # create subset of app data
-species_app_first_08<-isomex_first %>% 
-  filter(score>=0.8) %>% 
+species_app_first_05<-isomex_first %>% 
+  filter(score>=0.5) %>% 
   select(latin_name) %>% 
   group_by(latin_name) %>% 
   tally() %>% 
   arrange(desc(n)) %>% 
   mutate(id_by="App")
-colnames(species_app_first_08)<-c("species", "n","id_by")
+colnames(species_app_first_05)<-c("species", "n","id_by")
 
 # bind subsets
-species_df_first_08<-rbind(species_exp_first_08, species_app_first_08)
-head(species_df_first_08)
+species_df_first_05<-rbind(species_exp_first_05, species_app_first_05)
+head(species_df_first_05)
 
 # breaks and labels for figure
 brks_50_spec = seq(-3, 3, 1)
@@ -304,8 +307,8 @@ lbls_50_spec = paste0(as.character(c(seq(3, 0, -1), seq(1, 3,1))))
 # figure
 library(ggplot2)
 library(viridis)
-plot_spec<-tiff("./output/species_props_first_08.tiff", units="px",width = 3000,height = 2000,res = 360)
-species_df_first_08 %>% 
+tiff("./output/species_props_first_05.tiff", units="px",width = 3000,height = 2000,res = 360)
+plot_spec<-species_df_first_05 %>% 
   mutate(counts=ifelse(id_by=="Expert", n, -n)) %>%  
   ggplot(., aes(x=reorder(species, counts), y=counts, fill=id_by))+
   geom_bar(stat="identity", width=0.5)+
@@ -322,7 +325,7 @@ species_df_first_08 %>%
         legend.text = element_text(size=10),
         panel.grid.minor = element_blank()) +
   labs(y="Counts", fill="Identified by", 
-       title="Plant species by method \n(scores>0.8, first score per URL)")+
+       title="Plant species by method \n(scores>0.5, first score per URL)")+
   scale_fill_grey(start=0.1, end=0.75, labels=c("App","Experts"))        
 dev.off()
 
@@ -360,8 +363,8 @@ summary(genus_df_first)
 
 
 # breaks and labels for figure
-brks_50_genus = seq(-36, 36, 2)
-lbls_50_genus = paste0(as.character(c(seq(36, 0, -2), seq(2, 36,2))))
+brks_50_genus = seq(-6, 6, 1)
+lbls_50_genus = paste0(as.character(c(seq(6, 0, -1), seq(1, 6,1))))
 
 # figure
 tiff("./output/genus_props_first.tiff", units="px",width = 3000,height = 2000,res = 360)
@@ -444,7 +447,9 @@ dev.off()
 
 # figure as panel
 library(cowplot)
-plot_grid(plot_spec, plot_gen, plot_fam, nrow=3)
+tiff("./output/comparison_panel.jpeg", units="px",width = 2500,height = 3000,res = 300)
+plot_grid(plot_spec, plot_gen, plot_fam, nrow=3, labels="auto")
+dev.off()
 
 # 4. Species list ####
 
@@ -527,10 +532,7 @@ plot2<-isomex_first %>% distinct(image_url, .keep_all=TRUE) %>%
 dev.off()
 
 # figure as panel
-library(gridExtra)
-grid.arrange()
-
 library(cowplot)
-tiff("./output/interaction_color.tiff", units="px",width = 1800,height = 1200,res = 300)
-plot_grid(plot1, plot2)
+tiff("./output/interaction_color.jpeg", units="px",width = 1800,height = 1200,res = 300)
+plot_grid(plot1, plot2, labels="auto")
 dev.off()
